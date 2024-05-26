@@ -39,14 +39,13 @@ class Game:
 
         self.clock = pygame.time.Clock()
         self.snake = Snake(w=WIDTH, h=HEIGHT)
-        # self.snake = SnakeGame()
         self.snake.display = self.screen
         font = pygame.font.Font("arial.ttf", 25)
         self.snake.font = font
 
     def run(self):
 
-        while True:
+        while not self.snake.game_over:
             self.screen.fill(BLACK)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -60,7 +59,6 @@ class Game:
                     elif event.key == pygame.K_UP:
                         self.snake.direction = Direction.UP
                     elif event.key == pygame.K_DOWN:
-                        print("pressed")
                         self.snake.direction = Direction.DOWN
 
             self.snake.update()
@@ -68,6 +66,8 @@ class Game:
             # pygame.display.update()
             pygame.display.flip()
             self.clock.tick(FPS)
+
+        print(f"Final Score: {self.snake.score}")
 
 
 Game().run()

@@ -3,11 +3,13 @@ from collections import namedtuple
 from enum import Enum
 import random
 
+
 class Direction(Enum):
     RIGHT = 1
     LEFT = 2
     UP = 3
     DOWN = 4
+
 
 BLOCK_SIZE = 20
 CONSTANT_SPEED = 1
@@ -31,6 +33,7 @@ PINK = (255, 192, 203)
 
 Point = namedtuple("Point", ['x', 'y', 'color'])
 
+
 class Snake:
     def __init__(self, w, h):
         self.w = w
@@ -47,10 +50,11 @@ class Snake:
         self.score = 0
         self.food = None
         self._place_food()
+        self.game_over = False
 
     def _place_food(self):
         x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
-        y = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
+        y = random.randint(0, (self.h - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
         self.food = Point(x, y, RED)
         if self.food in self.snake:
             self._place_food()
@@ -87,7 +91,17 @@ class Snake:
                          pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
         text = self.font.render("Score: " + str(self.score), True, WHITE)
         self.display.blit(text, [0, 0])
-        # pygame.display.flip()
+
+    def check_game_over(self):
+        # check if the snake is outside the window
+        if self.head.x > self.w - BLOCK_SIZE or self.head.x < 0 or self.head.y > self.h - BLOCK_SIZE or self.head.y < 0:
+            self.game_over = True
+            return
+
+        # check if collision with itself.
+        if self.head in self.snake[1:]:
+            self.game_over = True
+            return
 
     def update(self):
         # update the snake head to include the next head
@@ -96,15 +110,16 @@ class Snake:
         # update the snake to include the head, insert at start
         self.snake.insert(0, self.head)
 
+        # check for game over
+        self.check_game_over()
+        if self.game_over:
+            return
         # if food is eaten then keep the snake as it is if not then pop element
-        if self.head == self.food:
+        if self.head.x == self.food.x and self.head.y == self.food.y:
             self._place_food()
             self.score += 1
         else:
-            print("head len", len(self.snake))
-            print(self.snake)
             self.snake.pop()
 
     def render(self):
         self.__update_ui()
-
