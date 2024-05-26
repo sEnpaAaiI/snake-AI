@@ -10,9 +10,6 @@ WIDTH = 640
 HEIGHT = 480
 FPS = 15
 
-Point = namedtuple("Point", ['x', 'y', 'color'])
-
-
 class Game:
     def __init__(self):
         pygame.init()

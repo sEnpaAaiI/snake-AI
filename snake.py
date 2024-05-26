@@ -28,7 +28,6 @@ class Color(Enum):
     PINK = (255, 192, 203)
 
 BLOCK_SIZE = 20
-CONSTANT_SPEED = 1
 
 Point = namedtuple("Point", ['x', 'y', 'color'])
 
