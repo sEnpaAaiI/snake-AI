@@ -3,15 +3,11 @@ from collections import namedtuple
 from enum import Enum
 import random
 
-
-pygame.init()
-font = pygame.font.Font("arial.ttf", 25)
 class Direction(Enum):
     RIGHT = 1
     LEFT = 2
     UP = 3
     DOWN = 4
-
 
 BLOCK_SIZE = 20
 CONSTANT_SPEED = 1
@@ -33,9 +29,7 @@ DARK_GRAY = (169, 169, 169)
 BROWN = (165, 42, 42)
 PINK = (255, 192, 203)
 
-
 Point = namedtuple("Point", ['x', 'y', 'color'])
-
 
 class Snake:
     def __init__(self, w, h):
@@ -47,7 +41,7 @@ class Snake:
         self.head = Point(self.w/2, self.h/2, BLUE)
         self.snake = [self.head,
                       Point(self.w/2 - BLOCK_SIZE,
-                            self.h/2 , BLUE),
+                            self.h/2, BLUE),
                       Point(self.w/2 - 2 * BLOCK_SIZE, self.h/2, BLUE)]
 
         self.score = 0
@@ -61,22 +55,56 @@ class Snake:
         if self.food in self.snake:
             self._place_food()
 
-    def __update_ui(self, surf):
+    def __move(self, direction):
+        x = self.head.x
+        y = self.head.y
+
+        # right, left, up, down
+        if direction == Direction.RIGHT:
+            x += BLOCK_SIZE
+        elif direction == Direction.LEFT:
+            x -= BLOCK_SIZE
+        elif direction == Direction.UP:
+            y -= BLOCK_SIZE
+        elif direction == Direction.DOWN:
+            y += BLOCK_SIZE
+
+        self.head = Point(x, y, BLUE)
+
+    def __update_ui(self):
         for p in self.snake:
-            pygame.draw.rect(surf,
+            pygame.draw.rect(self.display,
                              p.color,
                              pygame.Rect(p.x, p.y, BLOCK_SIZE, BLOCK_SIZE))
             y = 4
-            pygame.draw.rect(surf,
+            pygame.draw.rect(self.display,
                              PURPLE,
-                             pygame.Rect(p.x+y, p.y+y, BLOCK_SIZE - 2*y, BLOCK_SIZE- 2*y))
-            del y
+                             pygame.Rect(p.x+y, p.y+y, BLOCK_SIZE - 2*y, BLOCK_SIZE - 2*y))
+            # del y
 
-        text = font.render("Score: " + str(self.score), True, WHITE)
-        surf.blit(text, [0, 0])
-        pygame.draw.rect(surf, 
+        pygame.draw.rect(self.display,
                          self.food.color,
                          pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
+        text = self.font.render("Score: " + str(self.score), True, WHITE)
+        self.display.blit(text, [0, 0])
+        # pygame.display.flip()
 
-    def update(self, surf):
-        self.__update_ui(surf)
+    def update(self):
+        # update the snake head to include the next head
+        self.__move(self.direction)
+
+        # update the snake to include the head, insert at start
+        self.snake.insert(0, self.head)
+
+        # if food is eaten then keep the snake as it is if not then pop element
+        if self.head == self.food:
+            self._place_food()
+            self.score += 1
+        else:
+            print("head len", len(self.snake))
+            print(self.snake)
+            self.snake.pop()
+
+    def render(self):
+        self.__update_ui()
+
