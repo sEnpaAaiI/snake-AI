@@ -4,28 +4,11 @@ from enum import Enum
 from collections import namedtuple
 import random
 
-from snake import Snake, Direction, BLOCK_SIZE
+from snake import Snake, Direction, BLOCK_SIZE, Color
 
 WIDTH = 640
 HEIGHT = 480
 FPS = 15
-
-# COlORS
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-YELLOW = (255, 255, 0)
-CYAN = (0, 255, 255)
-MAGENTA = (255, 0, 255)
-ORANGE = (255, 165, 0)
-PURPLE = (128, 0, 128)
-GRAY = (128, 128, 128)
-LIGHT_GRAY = (211, 211, 211)
-DARK_GRAY = (169, 169, 169)
-BROWN = (165, 42, 42)
-PINK = (255, 192, 203)
 
 Point = namedtuple("Point", ['x', 'y', 'color'])
 
@@ -46,7 +29,7 @@ class Game:
     def run(self):
 
         while not self.snake.game_over:
-            self.screen.fill(BLACK)
+            self.screen.fill(Color.BLACK.value)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
