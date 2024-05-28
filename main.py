@@ -11,7 +11,8 @@ HEIGHT = 480
 FPS = 15
 
 class Game:
-    def __init__(self):
+    def __init__(self,
+                 n_games = 100):
         pygame.init()
 
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -23,31 +24,65 @@ class Game:
         font = pygame.font.Font("arial.ttf", 25)
         self.snake.font = font
 
-    def run(self):
+        self.n_games = n_games
+        self.agent = ...
 
-        while not self.snake.game_over:
-            self.screen.fill(Color.BLACK.value)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_LEFT:
-                        self.snake.direction = Direction.LEFT
-                    elif event.key == pygame.K_RIGHT:
-                        self.snake.direction = Direction.RIGHT
-                    elif event.key == pygame.K_UP:
-                        self.snake.direction = Direction.UP
-                    elif event.key == pygame.K_DOWN:
-                        self.snake.direction = Direction.DOWN
+    def run(self, ai=None):
 
-            self.snake.update()
-            self.snake.render()
-            # pygame.display.update()
-            pygame.display.flip()
-            self.clock.tick(FPS)
+        if not ai:
+            while not self.snake.game_over:
+                self.screen.fill(Color.BLACK.value)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_LEFT:
+                            self.snake.direction = Direction.LEFT
+                        elif event.key == pygame.K_RIGHT:
+                            self.snake.direction = Direction.RIGHT
+                        elif event.key == pygame.K_UP:
+                            self.snake.direction = Direction.UP
+                        elif event.key == pygame.K_DOWN:
+                            self.snake.direction = Direction.DOWN
 
-        print(f"Final Score: {self.snake.score}")
+                self.snake.update()
+                self.snake.render()
+                # pygame.display.update()
+                pygame.display.flip()
+                self.clock.tick(FPS)
+
+            print(f"Final Score: {self.snake.score}")
+        else:
+            while self.n_games:
+
+                self.screen.fill(Color.BLACK.value)
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+                
+                # update direction of snake
+                self.agent.take_action()
+                
+                # update the ai model
+                self.agent.single_train_step()
+
+                # update the snake in UI
+                self.snake.update()
+                self.snake.render()
+                pygame.display.flip()
+                self.clock.tick(FPS)
+
+                # check for game over.
+                if self.snake.game_over:
+                    self.snake.train_batch()
+
+                    # reset the game
+                    self.snake.reset()
+
+                    # get stats etc...
+
 
 
 Game().run()

@@ -10,6 +10,7 @@ class Direction(Enum):
     UP = 3
     DOWN = 4
 
+
 class Color(Enum):
     BLACK = (0, 0, 0)
     WHITE = (255, 255, 255)
@@ -27,6 +28,7 @@ class Color(Enum):
     BROWN = (165, 42, 42)
     PINK = (255, 192, 203)
 
+
 BLOCK_SIZE = 20
 
 Point = namedtuple("Point", ['x', 'y', 'color'])
@@ -37,6 +39,9 @@ class Snake:
         self.w = w
         self.h = h
 
+        self.reset()
+
+    def reset(self):
         self.direction = Direction.RIGHT
 
         self.head = Point(self.w/2, self.h/2, Color.BLUE.value)
@@ -87,7 +92,8 @@ class Snake:
         pygame.draw.rect(self.display,
                          self.food.color,
                          pygame.Rect(self.food.x, self.food.y, BLOCK_SIZE, BLOCK_SIZE))
-        text = self.font.render("Score: " + str(self.score), True, Color.WHITE.value)
+        text = self.font.render(
+            "Score: " + str(self.score), True, Color.WHITE.value)
         self.display.blit(text, [0, 0])
 
     def check_game_over(self):
