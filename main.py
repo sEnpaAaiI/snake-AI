@@ -76,6 +76,8 @@ class Game:
         else:
             while self.n_games:
                 if self.snake.game_over:
+                    # print(f'The fitness of the snake is {self.agent.fitness()}')
+                    # print(f"The socre of the snake is {self.snake.score}")
                     self.snake.reset()
                 self.screen.fill(Color.BLACK.value)
                 for event in pygame.event.get():

@@ -129,12 +129,13 @@ class Snake:
 
     def check_game_over(self):
         # check if the snake is outside the window
-        if self.head.x > self.w - BLOCK_SIZE or self.head.x < 0 or self.head.y > self.h - BLOCK_SIZE or self.head.y < 0:
+        if (self.head.x > self.w - BLOCK_SIZE) or (self.head.x < 0) or (self.head.y > self.h - BLOCK_SIZE) or (self.head.y < 0):
             self.game_over = True
             return
 
         # check if collision with itself.
         if self.head in self.snake[1:]:
+            print("snake collided with itself")
             self.game_over = True
             return
 

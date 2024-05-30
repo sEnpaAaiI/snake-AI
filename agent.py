@@ -29,9 +29,9 @@ class SnakeModel(nn.Module):
         )
 
     def forward(self, state: torch.Tensor) -> torch.Tensor:
-        print(state.shape)
+        # print(state.shape)
         x = self.l(state)
-        print(x.shape)
+        # print(x.shape)
         return x
 
 # class SnakeModel:
@@ -68,6 +68,7 @@ class Agent:
         self.state = None
         self.snake = snake
         self.model = model(32, 10, 4)
+        self.steps = 0
 
     def get_state(self) -> None:
         """
@@ -183,29 +184,16 @@ class Agent:
         of snake.
         """
         next_action = self.model(self.state)
-        print(next_action)
         next_action = torch.argmax(next_action).item()
         temp_direction = [Direction.RIGHT,
                           Direction.LEFT, Direction.UP, Direction.DOWN]
         next_direction = temp_direction[next_action]
         self.snake.head_direction = next_direction
-        print(f"snake will move in {self.snake.head_direction}")
+        # print(f"snake will move in {self.snake.head_direction}")
 
-    def loss_fn(self):
-        """
-        Implements the loss function or the 
-        quality function
-        """
-        pass
+    def fitness(self):
+        """f(steps, apples) = steps + (2**apples + apples**2.1*500) - [apples ** 1.2 * (0.25 * steps)**1.3]"""
+        steps = self.steps
+        apples = self.snake.score
 
-    def single_train_step(self,):
-        """
-        Trains the ai for steps
-        """
-        pass
-
-    def train_batch(self):
-        """
-        Train the ai for batches
-        """
-        pass
+        return steps + (2 ** apples + apples ** 2.1 * 500) - (apples ** 1.2 *  (0.25 * steps) ** 1.3)
