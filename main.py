@@ -27,6 +27,20 @@ class Game:
         self.n_games = n_games
         self.agent = ...
 
+
+    def display_blocks(self):
+        for x in range(0, WIDTH, BLOCK_SIZE):
+            for y in range(0, HEIGHT, BLOCK_SIZE):
+                pygame.draw.rect(self.screen,
+                                 Color.PURPLE.value,
+                                 pygame.Rect(x, y, BLOCK_SIZE, BLOCK_SIZE))
+
+                # This is the width
+                z = 0.2
+                pygame.draw.rect(self.screen,
+                                 Color.BLACK.value,
+                                 pygame.Rect(x+z, y+z, BLOCK_SIZE - 2*z, BLOCK_SIZE - 2*z))
+                
     def run(self, ai=None):
 
         if not ai:
@@ -38,14 +52,15 @@ class Game:
                         quit()
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_LEFT:
-                            self.snake.direction = Direction.LEFT
+                            self.snake.head_direction = Direction.LEFT
                         elif event.key == pygame.K_RIGHT:
-                            self.snake.direction = Direction.RIGHT
+                            self.snake.head_direction = Direction.RIGHT
                         elif event.key == pygame.K_UP:
-                            self.snake.direction = Direction.UP
+                            self.snake.head_direction = Direction.UP
                         elif event.key == pygame.K_DOWN:
-                            self.snake.direction = Direction.DOWN
+                            self.snake.head_direction = Direction.DOWN
 
+                self.display_blocks()
                 self.snake.update()
                 self.snake.render()
                 # pygame.display.update()

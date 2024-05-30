@@ -42,7 +42,8 @@ class Snake:
         self.reset()
 
     def reset(self):
-        self.direction = Direction.RIGHT
+        self.head_direction = Direction.RIGHT
+        self.tail_direction = Direction.RIGHT
 
         self.head = Point(self.w/2, self.h/2, Color.BLUE.value)
         self.snake = [self.head,
@@ -54,6 +55,7 @@ class Snake:
         self.food = None
         self._place_food()
         self.game_over = False
+        self.tail = self.snake[-1]
 
     def _place_food(self):
         x = random.randint(0, (self.w - BLOCK_SIZE) // BLOCK_SIZE) * BLOCK_SIZE
@@ -109,7 +111,7 @@ class Snake:
 
     def update(self):
         # update the snake head to include the next head
-        self.__move(self.direction)
+        self.__move(self.head_direction)
 
         # update the snake to include the head, insert at start
         self.snake.insert(0, self.head)
@@ -124,6 +126,25 @@ class Snake:
             self.score += 1
         else:
             self.snake.pop()
+
+        # update tail_direction
+        self.tail_direction = self.check_relative_block_position(self.tail, self.snake[-1])
+        self.tail = self.snake[-1]
+
+    def check_relative_block_position(self, block1, block2):
+        """
+        It will return relative pos of block2 wrt block1
+        eg: if block2 is in left to block1 it will return left..
+        """
+        if block1.x < block2.x:
+            return Direction.RIGHT
+        if block1.x > block2.x:
+            return Direction.LEFT
+        if block1.y < block2.y:
+            return Direction.DOWN
+        if block1.y > block2.y:
+            return Direction.UP
+        
 
     def render(self):
         self.__update_ui()
