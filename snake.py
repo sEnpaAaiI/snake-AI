@@ -80,6 +80,35 @@ class Snake:
 
         self.head = Point(x, y, Color.BLUE.value)
 
+    def _direction_state(self, intial_box, get_next_block):
+        """
+        inital_box: Point()
+        The distance given is in terms of blocks
+        """
+        wall_distance, snake_body, food_distance = 0, 0, 0
+        # this is to keep track how far in terms of blocks we are from the initial_box
+        curr_blocks = 0
+        next_block = get_next_block(intial_box)
+        while not next_block.x >= self.w or next_block.y >= self.h or next_block.x <= 0 or next_block.y <= 0:
+
+            wall_distance += 1
+            curr_blocks += 1
+
+            # not considering head cause we are looking from head, i.e., initial box is head itself
+            # slight optimization, as there is only 1 food currently.
+            if food_distance == 0:
+                if next_block.x == self.food.x and next_block.y == self.food.y:
+                    food_distance = curr_blocks
+
+            if snake_body == 0:
+                for body in self.snake[1:]:
+                    if body.x == next_block.x and body.y == next_block.y:
+                        snake_body = curr_blocks
+
+            next_block = get_next_block(next_block)
+
+        return (wall_distance, snake_body, food_distance)
+
     def __update_ui(self):
         for p in self.snake:
             pygame.draw.rect(self.display,
@@ -128,7 +157,8 @@ class Snake:
             self.snake.pop()
 
         # update tail_direction
-        self.tail_direction = self.check_relative_block_position(self.tail, self.snake[-1])
+        self.tail_direction = self.check_relative_block_position(
+            self.tail, self.snake[-1])
         self.tail = self.snake[-1]
 
     def check_relative_block_position(self, block1, block2):
@@ -144,7 +174,6 @@ class Snake:
             return Direction.DOWN
         if block1.y > block2.y:
             return Direction.UP
-        
 
     def render(self):
         self.__update_ui()

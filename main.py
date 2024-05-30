@@ -4,15 +4,16 @@ from enum import Enum
 from collections import namedtuple
 import random
 
-from snake import Snake, Direction, BLOCK_SIZE, Color
+from snake import Snake, Direction, BLOCK_SIZE, Color, Point
 
 WIDTH = 640
 HEIGHT = 480
-FPS = 15
+FPS = 20
+
 
 class Game:
     def __init__(self,
-                 n_games = 100):
+                 n_games=100):
         pygame.init()
 
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -27,7 +28,6 @@ class Game:
         self.n_games = n_games
         self.agent = ...
 
-
     def display_blocks(self):
         for x in range(0, WIDTH, BLOCK_SIZE):
             for y in range(0, HEIGHT, BLOCK_SIZE):
@@ -40,7 +40,7 @@ class Game:
                 pygame.draw.rect(self.screen,
                                  Color.BLACK.value,
                                  pygame.Rect(x+z, y+z, BLOCK_SIZE - 2*z, BLOCK_SIZE - 2*z))
-                
+
     def run(self, ai=None):
 
         if not ai:
@@ -76,10 +76,10 @@ class Game:
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         quit()
-                
+
                 # update direction of snake
                 self.agent.take_action()
-                
+
                 # update the ai model
                 self.agent.single_train_step()
 
@@ -97,7 +97,6 @@ class Game:
                     self.snake.reset()
 
                     # get stats etc...
-
 
 
 Game().run()
