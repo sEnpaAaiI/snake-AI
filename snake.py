@@ -89,8 +89,9 @@ class Snake:
         # this is to keep track how far in terms of blocks we are from the initial_box
         curr_blocks = 0
         next_block = get_next_block(intial_box)
-        while not next_block.x >= self.w or next_block.y >= self.h or next_block.x <= 0 or next_block.y <= 0:
-
+        while True:
+            if (next_block.x >= self.w) or (next_block.y >= self.h) or (next_block.x <= 0) or (next_block.y <= 0):
+                break
             wall_distance += 1
             curr_blocks += 1
 
@@ -106,7 +107,6 @@ class Snake:
                         snake_body = curr_blocks
 
             next_block = get_next_block(next_block)
-
         return (wall_distance, snake_body, food_distance)
 
     def __update_ui(self):

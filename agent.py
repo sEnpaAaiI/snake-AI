@@ -24,12 +24,25 @@ class SnakeModel(nn.Module):
             nn.ELU(),
             # nn.Linear(hidden_units * 2, hidden_units),
             # nn.ELU(),
-            nn.Linear(hidden_units, output_units)
+            nn.Linear(hidden_units, output_units),
+            nn.Softmax(dim=-1),
         )
 
     def forward(self, state: torch.Tensor) -> torch.Tensor:
         return self.l(state)
 
+# class SnakeModel:
+#     def __init__(self,
+#                  input_units, 
+#                  hidden_units,
+#                  output_units):
+#         self.l1 = np.random.randn(input_units, hidden_units)
+#         self.l2 = np.random.randn(hidden_units, output_units)
+
+#     def forward(self, state):
+#         # 32 X 1, 32 X 10 
+#         x = state.T @ self.l1 # 1, 10
+#         return x @ self.l2 # 1, 10 ... 10, 4 -> 1, 4
 
 class SnakeTrainer:
     def __init__(self,
@@ -53,7 +66,7 @@ class Agent:
         self.snake = snake
         self.model = model(32, 10, 4)
 
-    def get_state(self) -> torch.Tensor:
+    def get_state(self) -> None:
         """
         one hot vectors of head and tail direction
         8 directions which include 3 things
@@ -146,9 +159,8 @@ class Agent:
         wall_distance, snake_body, food_distance = self.snake._direction_state(
             self.snake.head, t4)
         t4_direction = [wall_distance, snake_body, food_distance]
-
         # making tensor
-        inp = torch.tensor([
+        self.state = torch.tensor([
             *right_direction,
             *left_direction,
             *up_direction,
@@ -160,10 +172,7 @@ class Agent:
             *head_direction,
             *tail_direction
         ],
-            dtype=torch.float16,
-            requires_grad=True)
-
-        return inp
+            dtype=torch.float32,)
 
     def take_action(self):
         """
@@ -176,6 +185,7 @@ class Agent:
                           Direction.LEFT, Direction.UP, Direction.DOWN]
         next_direction = temp_direction[next_action]
         self.snake.direction = next_direction
+        return next_direction
 
     def loss_fn(self):
         """

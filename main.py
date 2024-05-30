@@ -1,4 +1,4 @@
-import torch
+# import torch
 import pygame
 import sys
 from enum import Enum
@@ -10,7 +10,7 @@ from agent import Agent
 
 WIDTH = 640
 HEIGHT = 480
-FPS = 1
+FPS = 20
 
 
 class Game:
@@ -27,7 +27,6 @@ class Game:
         font = pygame.font.Font("arial.ttf", 25)
         self.snake.font = font
 
-        self.n_games = n_games
         self.agent = Agent(snake=self.snake)
 
     def display_blocks(self):
@@ -65,43 +64,41 @@ class Game:
                 self.display_blocks()
                 self.snake.update()
                 self.snake.render()
-                # pygame.display.update()
                 pygame.display.flip()
-                print("huh???")
-                inp = self.agent.get_state()
-                print(inp)
+                
+                # self.agent.get_state()
+                # self.agent.take_action()
+                
                 self.clock.tick(FPS)
 
             print(f"Final Score: {self.snake.score}")
         else:
             while self.n_games:
-
                 self.screen.fill(Color.BLACK.value)
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         quit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_LEFT:
+                            self.snake.head_direction = Direction.LEFT
+                        elif event.key == pygame.K_RIGHT:
+                            self.snake.head_direction = Direction.RIGHT
+                        elif event.key == pygame.K_UP:
+                            self.snake.head_direction = Direction.UP
+                        elif event.key == pygame.K_DOWN:
+                            self.snake.head_direction = Direction.DOWN
 
-                # update direction of snake
-                self.agent.take_action()
-
-                # update the ai model
-                self.agent.single_train_step()
-
-                # update the snake in UI
+                self.display_blocks()
                 self.snake.update()
                 self.snake.render()
                 pygame.display.flip()
+                
+                # self.agent.get_state()
+                # self.agent.take_action()
+                
                 self.clock.tick(FPS)
 
-                # check for game over.
-                if self.snake.game_over:
-                    self.snake.train_batch()
-
-                    # reset the game
-                    self.snake.reset()
-
-                    # get stats etc...
-
+            print(f"Final Score: {self.snake.score}")
 
 Game().run()
