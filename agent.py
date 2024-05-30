@@ -29,7 +29,10 @@ class SnakeModel(nn.Module):
         )
 
     def forward(self, state: torch.Tensor) -> torch.Tensor:
-        return self.l(state)
+        print(state.shape)
+        x = self.l(state)
+        print(x.shape)
+        return x
 
 # class SnakeModel:
 #     def __init__(self,
@@ -172,20 +175,21 @@ class Agent:
             *head_direction,
             *tail_direction
         ],
-            dtype=torch.float32,)
-
+            dtype=torch.float32,).reshape(1, -1)
+        
     def take_action(self):
         """
         Updates the next direction 
         of snake.
         """
         next_action = self.model(self.state)
+        print(next_action)
         next_action = torch.argmax(next_action).item()
         temp_direction = [Direction.RIGHT,
                           Direction.LEFT, Direction.UP, Direction.DOWN]
         next_direction = temp_direction[next_action]
-        self.snake.direction = next_direction
-        return next_direction
+        self.snake.head_direction = next_direction
+        print(f"snake will move in {self.snake.head_direction}")
 
     def loss_fn(self):
         """

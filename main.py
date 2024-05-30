@@ -26,8 +26,9 @@ class Game:
         self.snake.display = self.screen
         font = pygame.font.Font("arial.ttf", 25)
         self.snake.font = font
+        self.n_games = n_games
 
-        self.agent = Agent(snake=self.snake)
+        self.agent = Agent(snake=self.snake, n_games=self.n_games)
 
     def display_blocks(self):
         for x in range(0, WIDTH, BLOCK_SIZE):
@@ -42,7 +43,7 @@ class Game:
                                  Color.BLACK.value,
                                  pygame.Rect(x+z, y+z, BLOCK_SIZE - 2*z, BLOCK_SIZE - 2*z))
 
-    def run(self, ai=None):
+    def run(self, ai=False):
 
         if not ai:
             while not self.snake.game_over:
@@ -74,31 +75,24 @@ class Game:
             print(f"Final Score: {self.snake.score}")
         else:
             while self.n_games:
+                if self.snake.game_over:
+                    self.snake.reset()
                 self.screen.fill(Color.BLACK.value)
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         quit()
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_LEFT:
-                            self.snake.head_direction = Direction.LEFT
-                        elif event.key == pygame.K_RIGHT:
-                            self.snake.head_direction = Direction.RIGHT
-                        elif event.key == pygame.K_UP:
-                            self.snake.head_direction = Direction.UP
-                        elif event.key == pygame.K_DOWN:
-                            self.snake.head_direction = Direction.DOWN
 
                 self.display_blocks()
+
+                self.agent.get_state()
+                self.agent.take_action()
+
                 self.snake.update()
                 self.snake.render()
                 pygame.display.flip()
-                
-                # self.agent.get_state()
-                # self.agent.take_action()
-                
                 self.clock.tick(FPS)
 
             print(f"Final Score: {self.snake.score}")
 
-Game().run()
+Game().run(ai=True)
