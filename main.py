@@ -1,3 +1,4 @@
+import torch
 import pygame
 import sys
 from enum import Enum
@@ -5,10 +6,11 @@ from collections import namedtuple
 import random
 
 from snake import Snake, Direction, BLOCK_SIZE, Color, Point
+from agent import Agent
 
 WIDTH = 640
 HEIGHT = 480
-FPS = 20
+FPS = 1
 
 
 class Game:
@@ -26,7 +28,7 @@ class Game:
         self.snake.font = font
 
         self.n_games = n_games
-        self.agent = ...
+        self.agent = Agent(snake=self.snake)
 
     def display_blocks(self):
         for x in range(0, WIDTH, BLOCK_SIZE):
@@ -65,6 +67,9 @@ class Game:
                 self.snake.render()
                 # pygame.display.update()
                 pygame.display.flip()
+                print("huh???")
+                inp = self.agent.get_state()
+                print(inp)
                 self.clock.tick(FPS)
 
             print(f"Final Score: {self.snake.score}")
