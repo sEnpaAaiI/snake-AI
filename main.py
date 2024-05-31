@@ -15,8 +15,7 @@ FPS = 100
 
 class Game:
     def __init__(self,
-                 n_games=3,
-                 n_agents=3,
+                 n_agents=10,
                  genetic=True):
         pygame.init()
 
@@ -25,7 +24,6 @@ class Game:
 
         self.clock = pygame.time.Clock()
         font = pygame.font.Font("arial.ttf", 25)
-        self.n_games = n_games
         self.n_agents = n_agents
         self.genetic = genetic
 
@@ -65,14 +63,16 @@ class Game:
     def run_genetic(self,):
 
         # run for each game
-        games_played = 0
-        for game_no in range(self.n_games):
+        for game_no in range(self.agents.total_games):
+            games_played = 0
             print(f"GAME NO: {game_no}")
-            while True:
 
-                # if (games_played % self.n_games == 0 and games_played != 0):
-                #     print(f"GAME NO: {game_no}")
-                #     game_no += 1
+            if game_no > 0:
+                self.agents.next_generation()
+            print(f"Total agents are {len(self.agents.agents)}")
+
+            # call for the next gen
+            while True:
 
                 if (len(self.agents.agents)) == games_played:
                     break
@@ -84,7 +84,7 @@ class Game:
                 # simulate 1 snake game
                 while True:
                     if self.current_agent.snake.game_over:
-                        print(f"agent: {self.agent['gen']}")
+                        print(f"agent: {self.agent['agent_no']}")
                         self.agents.update_agent()
 
                         # reset agent's snake for next fresh run
@@ -114,7 +114,7 @@ class Game:
             print("here are the results")
             for i in range(len(self.agents.agents.keys())):
                 a = self.agents.agents[i]
-                print(f"Agent: {a['gen']}")
+                print(f"Agent: {a['agent_no']}")
                 print(f"Fitness: {a['fitness']}")
                 print(f"Steps {a['steps']}")
                 print(f"Score {a['score']}")
