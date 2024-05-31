@@ -74,7 +74,7 @@ class Game:
                 #     print(f"GAME NO: {game_no}")
                 #     game_no += 1
 
-                if (self.n_agents) == games_played:
+                if (len(self.agents.agents)) == games_played:
                     break
 
                 # now run each snake
