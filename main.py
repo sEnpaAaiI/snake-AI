@@ -6,29 +6,42 @@ from collections import namedtuple
 import random
 
 from snake import Snake, Direction, BLOCK_SIZE, Color, Point
-from agent import Agent
+from agent import Agent, Agents
 
 WIDTH = 640
 HEIGHT = 480
-FPS = 20
+FPS = 100
 
 
 class Game:
     def __init__(self,
-                 n_games=100):
+                 n_games=1,
+                 n_agents=10,
+                 genetic=True):
         pygame.init()
 
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption("Simple testing game")
 
         self.clock = pygame.time.Clock()
-        self.snake = Snake(w=WIDTH, h=HEIGHT)
-        self.snake.display = self.screen
         font = pygame.font.Font("arial.ttf", 25)
-        self.snake.font = font
         self.n_games = n_games
+        self.n_agents = n_agents
+        self.genetic = genetic
 
-        self.agent = Agent(snake=self.snake, n_games=self.n_games)
+        if genetic:
+            self.agents = Agents(w=WIDTH,
+                                 h=HEIGHT,
+                                 n_agents=n_agents,
+                                 screen=self.screen,
+                                 font=font)
+
+        else:
+            self.snake = Snake(w=WIDTH, h=HEIGHT)
+            self.snake.display = self.screen
+            self.snake.font = font
+
+            self.agent = Agent(snake=self.snake, n_games=self.n_games)
 
     def display_blocks(self):
         for x in range(0, WIDTH, BLOCK_SIZE):
@@ -42,6 +55,65 @@ class Game:
                 pygame.draw.rect(self.screen,
                                  Color.BLACK.value,
                                  pygame.Rect(x+z, y+z, BLOCK_SIZE - 2*z, BLOCK_SIZE - 2*z))
+
+    def play(self):
+        if self.genetic:
+            self.run_genetic()
+        else:
+            self.run()
+
+    def run_genetic(self,):
+
+        # run for each game
+        games_played = 0
+        game_no = 0
+        while True:
+            # if (games_played % self.n_games == 0 and games_played != 0):
+            #     print(f"GAME NO: {game_no}")
+            #     game_no += 1
+            if self.n_games * self.n_agents == games_played:
+                break
+
+            # now run each snake
+            self.agent = self.agents.get_current_agent()
+            self.current_agent = self.agent["agent"]
+            games_played += 1
+
+            # simulate 1 snake game
+            while True:
+                if self.current_agent.snake.game_over:
+                    print(f"agent: {self.agent['gen']}")
+                    self.agents.update_agent()
+
+                    # reset agent's snake for next fresh run
+                    self.current_agent.snake.reset()
+                    break
+
+                self.screen.fill(Color.BLACK.value)
+                self.display_blocks()
+
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+
+                self.current_agent.get_state()
+                self.current_agent.take_action()
+                self.current_agent.snake.update()
+                self.current_agent.snake.render()
+
+                self.agents.update_steps()
+
+                pygame.display.flip()
+                self.clock.tick(FPS)
+        print("here are the results")
+        for i in range(len(self.agents.agents.keys())):
+            a = self.agents.agents[i]
+            print(f"Agent: {a['gen']}")
+            print(f"Fitness: {a['fitness']}")
+            print(f"Steps {a['steps']}")
+            print(f"Score {a['score']}")
+            print()
 
     def run(self, ai=False):
 
@@ -66,10 +138,10 @@ class Game:
                 self.snake.update()
                 self.snake.render()
                 pygame.display.flip()
-                
+
                 # self.agent.get_state()
                 # self.agent.take_action()
-                
+
                 self.clock.tick(FPS)
 
             print(f"Final Score: {self.snake.score}")
@@ -97,4 +169,5 @@ class Game:
 
             print(f"Final Score: {self.snake.score}")
 
-Game().run(ai=True)
+
+Game().play()

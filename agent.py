@@ -4,8 +4,53 @@ import torch.nn.functional as F
 import numpy as np
 import random
 from typing import Tuple, List, Optional, Dict
-from snake import Direction, Point, Color, BLOCK_SIZE
-# import pygame
+from snake import Direction, Point, Color, BLOCK_SIZE, Snake
+
+
+class Agents:
+    def __init__(self,
+                 w,
+                 h,
+                 screen,
+                 font,
+                 n_agents=10,):
+        self.agents = dict()
+        self.n_agents = n_agents
+        for i in range(n_agents):
+            self.agents[i] = {
+                "agent": Agent(snake=Snake(w=w, h=h),
+                               model=SnakeModel),
+                "fitness": list(),
+                "color": Color.GREEN.value,
+                "steps": list(),
+                "gen": i,
+                "score": list(),
+            }
+
+        # setting some values
+        for i in range(n_agents):
+            self.agents[i]["agent"].snake.display = screen
+            self.agents[i]["agent"].snake.font = font
+
+        self.current_agent_idx = 0
+        self.curr_steps = 0
+
+    def get_current_agent(self):
+        self.current_agent_idx += 1
+        return self.agents[self.current_agent_idx-1]
+    
+    def update_agent(self):
+        temp = self.agents[self.current_agent_idx-1]
+        temp["steps"].append(self.curr_steps)
+        temp["fitness"].append(temp["agent"].fitness(self.curr_steps))
+        temp["score"].append(temp["agent"].snake.score)
+        self.curr_steps = 0
+
+    def update_steps(self):
+        self.curr_steps += 1
+
+    def some(self):
+        pass
 
 
 class SnakeModel(nn.Module):
@@ -36,39 +81,25 @@ class SnakeModel(nn.Module):
 
 # class SnakeModel:
 #     def __init__(self,
-#                  input_units, 
+#                  input_units,
 #                  hidden_units,
 #                  output_units):
 #         self.l1 = np.random.randn(input_units, hidden_units)
 #         self.l2 = np.random.randn(hidden_units, output_units)
 
 #     def forward(self, state):
-#         # 32 X 1, 32 X 10 
+#         # 32 X 1, 32 X 10
 #         x = state.T @ self.l1 # 1, 10
 #         return x @ self.l2 # 1, 10 ... 10, 4 -> 1, 4
-
-class SnakeTrainer:
-    def __init__(self,
-                 lr=0.001):
-        self.model = SnakeModel()
-        self.lr = lr
-
-    def train_per_iteration(self,
-                            curr_state,
-                            next_state):
-        pass
 
 
 class Agent:
     def __init__(self,
                  snake,
-                 n_games=10,
                  model=SnakeModel):
-        self.n_games = n_games
         self.state = None
         self.snake = snake
         self.model = model(32, 10, 4)
-        self.steps = 0
 
     def get_state(self) -> None:
         """
@@ -177,7 +208,7 @@ class Agent:
             *tail_direction
         ],
             dtype=torch.float32,).reshape(1, -1)
-        
+
     def take_action(self):
         """
         Updates the next direction 
@@ -191,9 +222,8 @@ class Agent:
         self.snake.head_direction = next_direction
         # print(f"snake will move in {self.snake.head_direction}")
 
-    def fitness(self):
+    def fitness(self, steps):
         """f(steps, apples) = steps + (2**apples + apples**2.1*500) - [apples ** 1.2 * (0.25 * steps)**1.3]"""
-        steps = self.steps
         apples = self.snake.score
 
-        return steps + (2 ** apples + apples ** 2.1 * 500) - (apples ** 1.2 *  (0.25 * steps) ** 1.3)
+        return steps + (2 ** apples + apples ** 2.1 * 500) - (apples ** 1.2 * (0.25 * steps) ** 1.3)
