@@ -10,12 +10,12 @@ from agent import Agent, Agents
 
 WIDTH = 640
 HEIGHT = 480
-FPS = 100
+FPS = 1000
 
 
 class Game:
     def __init__(self,
-                 n_agents=10,
+                 n_agents=500,
                  genetic=True):
         pygame.init()
 
@@ -65,6 +65,7 @@ class Game:
         # run for each game
         for game_no in range(self.agents.total_games):
             games_played = 0
+            print("####################")
             print(f"GAME NO: {game_no}")
 
             if game_no > 0:
@@ -83,8 +84,13 @@ class Game:
 
                 # simulate 1 snake game
                 while True:
+
+                    # if the snake is stuck in a loop
+                    if self.agents.curr_steps > 100 and self.current_agent.snake.score < 10:
+                        self.current_agent.snake.game_over = True
+
                     if self.current_agent.snake.game_over:
-                        print(f"agent: {self.agent['agent_no']}")
+                        # print(f"agent: {self.agent['agent_no']}")
                         self.agents.update_agent()
 
                         # reset agent's snake for next fresh run
@@ -111,14 +117,14 @@ class Game:
 
                     pygame.display.flip()
                     self.clock.tick(FPS)
-            print("here are the results")
-            for i in range(len(self.agents.agents.keys())):
-                a = self.agents.agents[i]
-                print(f"Agent: {a['agent_no']}")
-                print(f"Fitness: {a['fitness']}")
-                print(f"Steps {a['steps']}")
-                print(f"Score {a['score']}")
-                print()
+        print("\nResults\n#############\n")
+        for i in range(len(self.agents.agents.keys())):
+            a = self.agents.agents[i]
+            print(f"Agent: {a['agent_no']}")
+            print(f"Fitness: {a['fitness']}")
+            print(f"Steps {a['steps']}")
+            print(f"Score {a['score']}")
+            print()
 
     def run(self, ai=False):
 

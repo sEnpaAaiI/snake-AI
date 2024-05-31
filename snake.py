@@ -135,7 +135,7 @@ class Snake:
 
         # check if collision with itself.
         if self.head in self.snake[1:]:
-            print("snake collided with itself")
+            # print("snake collided with itself")
             self.game_over = True
             return
 
