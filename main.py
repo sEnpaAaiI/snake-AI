@@ -15,8 +15,8 @@ FPS = 100
 
 class Game:
     def __init__(self,
-                 n_games=1,
-                 n_agents=10,
+                 n_games=3,
+                 n_agents=3,
                  genetic=True):
         pygame.init()
 
@@ -66,54 +66,59 @@ class Game:
 
         # run for each game
         games_played = 0
-        game_no = 0
-        while True:
-            # if (games_played % self.n_games == 0 and games_played != 0):
-            #     print(f"GAME NO: {game_no}")
-            #     game_no += 1
-            if self.n_games * self.n_agents == games_played:
-                break
-
-            # now run each snake
-            self.agent = self.agents.get_current_agent()
-            self.current_agent = self.agent["agent"]
-            games_played += 1
-
-            # simulate 1 snake game
+        for game_no in range(self.n_games):
+            print(f"GAME NO: {game_no}")
             while True:
-                if self.current_agent.snake.game_over:
-                    print(f"agent: {self.agent['gen']}")
-                    self.agents.update_agent()
 
-                    # reset agent's snake for next fresh run
-                    self.current_agent.snake.reset()
+                # if (games_played % self.n_games == 0 and games_played != 0):
+                #     print(f"GAME NO: {game_no}")
+                #     game_no += 1
+
+                if (self.n_agents) == games_played:
                     break
 
-                self.screen.fill(Color.BLACK.value)
-                self.display_blocks()
+                # now run each snake
+                self.agent = self.agents.get_current_agent()
+                self.current_agent = self.agent["agent"]
 
-                for event in pygame.event.get():
-                    if event.type == pygame.QUIT:
-                        pygame.quit()
-                        quit()
+                # simulate 1 snake game
+                while True:
+                    if self.current_agent.snake.game_over:
+                        print(f"agent: {self.agent['gen']}")
+                        self.agents.update_agent()
 
-                self.current_agent.get_state()
-                self.current_agent.take_action()
-                self.current_agent.snake.update()
-                self.current_agent.snake.render()
+                        # reset agent's snake for next fresh run
+                        self.current_agent.snake.reset()
 
-                self.agents.update_steps()
+                        # update no of games played
+                        games_played += 1
+                        break
 
-                pygame.display.flip()
-                self.clock.tick(FPS)
-        print("here are the results")
-        for i in range(len(self.agents.agents.keys())):
-            a = self.agents.agents[i]
-            print(f"Agent: {a['gen']}")
-            print(f"Fitness: {a['fitness']}")
-            print(f"Steps {a['steps']}")
-            print(f"Score {a['score']}")
-            print()
+                    self.screen.fill(Color.BLACK.value)
+                    self.display_blocks()
+
+                    for event in pygame.event.get():
+                        if event.type == pygame.QUIT:
+                            pygame.quit()
+                            quit()
+
+                    self.current_agent.get_state()
+                    self.current_agent.take_action()
+                    self.current_agent.snake.update()
+                    self.current_agent.snake.render()
+
+                    self.agents.update_steps()
+
+                    pygame.display.flip()
+                    self.clock.tick(FPS)
+            print("here are the results")
+            for i in range(len(self.agents.agents.keys())):
+                a = self.agents.agents[i]
+                print(f"Agent: {a['gen']}")
+                print(f"Fitness: {a['fitness']}")
+                print(f"Steps {a['steps']}")
+                print(f"Score {a['score']}")
+                print()
 
     def run(self, ai=False):
 
