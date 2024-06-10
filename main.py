@@ -1,3 +1,5 @@
+
+
 # import torch
 import pygame
 import sys
@@ -8,14 +10,14 @@ import random
 from snake import Snake, Direction, BLOCK_SIZE, Color, Point
 from agent import Agent, Agents
 
-WIDTH = 640
-HEIGHT = 480
+WIDTH = 240
+HEIGHT = 240
 FPS = 1000
 
 
 class Game:
     def __init__(self,
-                 n_agents=500,
+                 n_agents=100,
                  genetic=True):
         pygame.init()
 
@@ -23,7 +25,7 @@ class Game:
         pygame.display.set_caption("Simple testing game")
 
         self.clock = pygame.time.Clock()
-        font = pygame.font.Font("arial.ttf", 25)
+        self.font = pygame.font.Font("arial.ttf", 25)
         self.n_agents = n_agents
         self.genetic = genetic
 
@@ -32,12 +34,12 @@ class Game:
                                  h=HEIGHT,
                                  n_agents=n_agents,
                                  screen=self.screen,
-                                 font=font)
+                                 font=self.font)
 
         else:
             self.snake = Snake(w=WIDTH, h=HEIGHT)
             self.snake.display = self.screen
-            self.snake.font = font
+            self.snake.font = self.font
 
             self.agent = Agent(snake=self.snake, n_games=self.n_games)
 
@@ -60,13 +62,22 @@ class Game:
         else:
             self.run()
 
+    def extra_display(self, gen):
+        text = self.font.render(
+            "GEN: " + str(gen), True, Color.WHITE.value)
+        self.screen.blit(text, [WIDTH - 7 * BLOCK_SIZE, 0])
+
     def run_genetic(self,):
 
         # run for each game
+        self.agents.total_games = 100
         for game_no in range(self.agents.total_games):
             games_played = 0
             print("####################")
             print(f"GAME NO: {game_no}")
+            print(f"Best Scores:")
+            for k, v in self.agents.best_scores.items():
+                print(f"{k}: {v}")
 
             if game_no > 0:
                 self.agents.next_generation()
@@ -102,6 +113,7 @@ class Game:
 
                     self.screen.fill(Color.BLACK.value)
                     self.display_blocks()
+                    self.extra_display(self.agents.gen)
 
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
@@ -117,6 +129,7 @@ class Game:
 
                     pygame.display.flip()
                     self.clock.tick(FPS)
+
         print("\nResults\n#############\n")
         for i in range(len(self.agents.agents.keys())):
             a = self.agents.agents[i]

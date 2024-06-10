@@ -5,7 +5,8 @@ import numpy as np
 import random
 from typing import Tuple, List, Optional, Dict
 from snake import Direction, Point, Color, BLOCK_SIZE, Snake
-
+from model import SnakeModel
+import copy
 
 class Agents:
     def __init__(self,
@@ -19,12 +20,16 @@ class Agents:
         self.agents = dict()
         self.screen = screen
         self.font = font
+        self.best_scores = {
+            "fitness": 0,
+            "score": 0,
+        }
         self.gen = 0
         for i in range(n_agents):
             self.agents[i] = {
                 "agent": Agent(snake=Snake(w=w, h=h),
                                model=SnakeModel),
-                "fitness": list(),
+                "fitness": 0,
                 "color": Color.GREEN.value,
                 "steps": 0,
                 "gen": self.gen,
@@ -32,7 +37,7 @@ class Agents:
                 "agent_no": i,
             }
 
-        # calculate the games played
+        # calculate the games to be played
         temp = len(self.agents)
         self.total_games = 0
         while temp != 0:
@@ -51,7 +56,9 @@ class Agents:
         self.__initialize()
 
     def __initialize(self):
-        # setting some values
+        """
+        Setting some initial values for the Agents
+        """
         for i in range(len(self.agents)):
             self.agents[i]["agent"].snake.display = self.screen
             self.agents[i]["agent"].snake.font = self.font
@@ -60,10 +67,17 @@ class Agents:
         self.curr_steps = 0
 
     def get_current_agent(self):
+        """
+        Gets the current agent and updates the current agent idx
+        Used to simulate each agent one by one
+        """
         self.current_agent_idx += 1
         return self.agents[self.current_agent_idx-1]
 
     def update_agent(self):
+        """
+        Updates each agents values after a run/simulation
+        """
         temp = self.agents[self.current_agent_idx-1]
         temp["steps"] = self.curr_steps
         temp["fitness"] = temp["agent"].fitness(self.curr_steps)
@@ -71,6 +85,9 @@ class Agents:
         self.curr_steps = 0
 
     def update_steps(self):
+        """
+        Updates the steps taken by snake 
+        """
         self.curr_steps += 1
 
     def sort_agents(self) -> dict:
@@ -84,7 +101,77 @@ class Agents:
             )
         )
 
+    def __combine_agents_stragegy_2(self, agents):
+        """
+        Implements the strategy to combine agents from the current agents
+        Here's how it works:
+        - Pick top 10% of agents from the N agents
+        - Drop the remaining agents i.e., the 90%
+        - Make 9 new agents from the selected 10% agents.
+        - Continue until end.
+        """
+        new_agents = dict()
+        idx = 0
+
+        # pick the top 10% agents
+        N = len(agents)
+        no_top_agents = 0.1 * N
+
+        # this is cause we are going to change the items in new_agents, and we cannot iterate over it in the same time.
+        new_agents = dict()
+        temp = dict()
+
+        for k, v in agents.items():
+            if no_top_agents == 0:
+                break
+            else:
+                no_top_agents -= 1
+            new_agents[idx] = v
+            temp[idx] = v
+            idx += 1
+
+        # we are making 9 new agents from existing agents
+        for curr_agent in temp.values():
+            for mutation_no in range(9):
+                try:
+                    # create new agent
+                    m = Agent(snake=Snake(w=self.w,
+                                          h=self.h),
+                              model=SnakeModel)
+                    m1 = curr_agent["agent"].model
+                    new_m = m.model
+
+                    # update the new agents weights
+                    for (n1, a1), (n2, a2) in zip(m1.named_parameters(), new_m.named_parameters()):
+                        with torch.no_grad():
+                            a2.copy_(a1 + torch.randn(a2.shape)
+                                     * torch.randn(a2.shape))
+                            
+                    new_agents[idx] = {
+                        "agent": m,
+                        "fitness": 0,
+                        "color": Color.GREEN.value,
+                        "steps": 0,
+                        "gen": self.gen,
+                        "score": 0,
+                        "agent_no": idx,
+                    }
+                    idx += 1
+                except Exception as e:
+                    # this is when there aren't two value or
+                    # when len(agents) is odd
+                    print(f"Some excpetion occured for: {idx}")
+                    print(e)
+                    pass
+        
+        # print(f"New agents made in new generation are {len(new_agents)}")
+        # print(f"temp -> {len(temp)}, new_agents -> {len(new_agents)}, idx -> {idx}")
+        return new_agents
+
     def __combine_agents(self, agents):
+        """
+        Logic to make new agents from prev agents.
+        """
         new_agents = dict()
         idx = 0
         for a in range(0, len(agents), 2):
@@ -92,10 +179,7 @@ class Agents:
                 # create new agent
                 m = Agent(snake=Snake(w=self.w,
                                       h=self.h),
-                                      model=SnakeModel)
-
-                # print("made agent?????????")
-                # get each agent's model
+                          model=SnakeModel)
                 m1 = agents[a]["agent"].model
                 m2 = agents[a+1]["agent"].model
                 new_m = m.model
@@ -107,11 +191,11 @@ class Agents:
 
                 new_agents[idx] = {
                     "agent": m,
-                    "fitness": list(),
+                    "fitness": 0,
                     "color": Color.GREEN.value,
-                    "steps": list(),
+                    "steps": 0,
                     "gen": self.gen,
-                    "score": list(),
+                    "score": 0,
                     "agent_no": idx,
                 }
                 idx += 1
@@ -130,61 +214,32 @@ class Agents:
 
         Steps:
         - sort the agents based on fitness.
-        - combine weights of 2 agents
+        - make new agents using some strategy
         - make new agent from the combined weights
         - update the agents list
         """
         self.gen += 1
 
         sorted_agents = self.sort_agents()
-        combined_agents = self.__combine_agents(agents=sorted_agents)
+
+        # update best scores
+        if self.best_scores["fitness"] < sorted_agents[0]["fitness"]:
+            self.best_scores["fitness"] = sorted_agents[0]["fitness"]
+
+        if self.best_scores["score"] < sorted_agents[0]["score"]:
+            self.best_scores["score"] = sorted_agents[0]["score"]
+
+        combined_agents = self.__combine_agents_stragegy_2(agents=sorted_agents)
         self.agents = combined_agents
+
+        del sorted_agents
+        del combined_agents
         self.__initialize()
-
-    def some(self):
-        pass
-
-
-class SnakeModel(nn.Module):
-    """
-    the output is interpreted as follows
-    right, left, up, down
-    """
-
-    def __init__(self,
-                 input_units,
-                 hidden_units,
-                 output_units = 4):
-        super().__init__()
-        self.l = nn.Sequential(
-            nn.Linear(input_units, hidden_units),
-            nn.ELU(),
-            nn.Linear(hidden_units, output_units),
-            nn.Softmax(dim=-1),
-        )
-
-    def forward(self, state: torch.Tensor) -> torch.Tensor:
-        x = self.l(state)
-        return x
-
-# class SnakeModel:
-#     def __init__(self,
-#                  input_units,
-#                  hidden_units,
-#                  output_units):
-#         self.l1 = np.random.randn(input_units, hidden_units)
-#         self.l2 = np.random.randn(hidden_units, output_units)
-
-#     def forward(self, state):
-#         # 32 X 1, 32 X 10
-#         x = state.T @ self.l1 # 1, 10
-#         return x @ self.l2 # 1, 10 ... 10, 4 -> 1, 4
-
 
 class Agent:
     def __init__(self,
                  snake,
-                 model = SnakeModel):
+                 model=SnakeModel):
         self.state = None
         self.snake = snake
         self.model = model(32, 10, 4)
