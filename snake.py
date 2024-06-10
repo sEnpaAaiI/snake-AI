@@ -86,11 +86,13 @@ class Snake:
         The distance given is in terms of blocks
         """
         wall_distance, snake_body, food_distance = 0, 0, 0
+
         # this is to keep track how far in terms of blocks we are from the initial_box
         curr_blocks = 0
         next_block = get_next_block(intial_box)
+
         while True:
-            if (next_block.x >= self.w) or (next_block.y >= self.h) or (next_block.x <= 0) or (next_block.y <= 0):
+            if (next_block.x >= self.w) or (next_block.y >= self.h) or (next_block.x < 0) or (next_block.y < 0):
                 break
             wall_distance += 1
             curr_blocks += 1
@@ -150,6 +152,7 @@ class Snake:
         self.check_game_over()
         if self.game_over:
             return
+        
         # if food is eaten then keep the snake as it is if not then pop element
         if self.head.x == self.food.x and self.head.y == self.food.y:
             self._place_food()

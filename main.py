@@ -1,6 +1,3 @@
-
-
-# import torch
 import pygame
 import sys
 from enum import Enum
@@ -17,7 +14,7 @@ FPS = 1000
 
 class Game:
     def __init__(self,
-                 n_agents=100,
+                 n_agents=1000,
                  genetic=True):
         pygame.init()
 

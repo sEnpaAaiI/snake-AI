@@ -1,5 +1,6 @@
-import torch 
+import torch
 import torch.nn as nn
+
 
 class SnakeModel(nn.Module):
     """
@@ -14,7 +15,7 @@ class SnakeModel(nn.Module):
         super().__init__()
         self.l = nn.Sequential(
             nn.Linear(input_units, hidden_units),
-            nn.ELU(),
+            nn.ReLU(),
             nn.Linear(hidden_units, output_units),
             nn.Softmax(dim=-1),
         )

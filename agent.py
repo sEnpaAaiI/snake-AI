@@ -1,12 +1,8 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import numpy as np
-import random
-from typing import Tuple, List, Optional, Dict
-from snake import Direction, Point, Color, BLOCK_SIZE, Snake
+from snake import Color, BLOCK_SIZE, Snake
 from model import SnakeModel
-import copy
+from _agent import Agent
+
 
 class Agents:
     def __init__(self,
@@ -24,6 +20,11 @@ class Agents:
             "fitness": 0,
             "score": 0,
         }
+
+        self.this_gen_best_scores = {
+            "fitness": 0,
+            "score": 0,
+        }
         self.gen = 0
         for i in range(n_agents):
             self.agents[i] = {
@@ -37,22 +38,6 @@ class Agents:
                 "agent_no": i,
             }
 
-        # calculate the games to be played
-        temp = len(self.agents)
-        self.total_games = 0
-        while temp != 0:
-            self.total_games += 1
-            top = temp // 2
-            if top == 1:
-                self.total_games += 1
-                del top
-                break
-            if top % 2 != 0:
-                top -= 1
-            temp = top
-        del temp
-
-        print(f"Total games to play: {self.total_games}")
         self.__initialize()
 
     def __initialize(self):
@@ -78,10 +63,11 @@ class Agents:
         """
         Updates each agents values after a run/simulation
         """
-        temp = self.agents[self.current_agent_idx-1]
-        temp["steps"] = self.curr_steps
-        temp["fitness"] = temp["agent"].fitness(self.curr_steps)
-        temp["score"] = temp["agent"].snake.score
+        curr_agent = self.agents[self.current_agent_idx-1]
+        curr_agent["steps"] = self.curr_steps
+        curr_agent["fitness"] = curr_agent["agent"].fitness(self.curr_steps)
+        curr_agent["score"] = curr_agent["agent"].snake.score
+
         self.curr_steps = 0
 
     def update_steps(self):
@@ -101,13 +87,23 @@ class Agents:
             )
         )
 
+    def __combine_weights_s2(self, prev_m, new_m):
+        """
+        It combines the weights of the prev_m and new_m
+        using some strategy
+        """
+        for (_, prev), (_, neww) in zip(prev_m.named_parameters(), new_m.named_parameters()):
+            with torch.no_grad():
+                neww.copy_(prev + (torch.randn(prev.shape)
+                           * torch.randn(prev.shape)))
+
     def __combine_agents_stragegy_2(self, agents):
         """
         Implements the strategy to combine agents from the current agents
         Here's how it works:
         - Pick top 10% of agents from the N agents
         - Drop the remaining agents i.e., the 90%
-        - Make 9 new agents from the selected 10% agents.
+        - Make 90% new agents from the selected 10% agents.
         - Continue until end.
         """
         new_agents = dict()
@@ -117,7 +113,8 @@ class Agents:
         N = len(agents)
         no_top_agents = 0.1 * N
 
-        # this is cause we are going to change the items in new_agents, and we cannot iterate over it in the same time.
+        # this is cause we are going to change the items in new_agents,
+        # and we cannot iterate over it in the same time.
         new_agents = dict()
         temp = dict()
 
@@ -126,27 +123,48 @@ class Agents:
                 break
             else:
                 no_top_agents -= 1
+
+                # print("the agent taken is: ")
+                # print(f"{k}")
+                # print(f"{v}")
+                # print("\n")
+
             new_agents[idx] = v
+            new_agents[idx]["fitness"] = 0
+            new_agents[idx]["score"] = 0
+            new_agents[idx]["steps"] = 0
+            new_agents[idx]["gen"] = self.gen
+            new_agents[idx]["agent_no"] = idx
+
             temp[idx] = v
+            temp[idx]["fitness"] = 0
+            temp[idx]["score"] = 0
+            temp[idx]["gen"] = self.gen
+            temp[idx]["steps"] = 0
+            temp[idx]["agent_no"] = idx
+
             idx += 1
 
         # we are making 9 new agents from existing agents
         for curr_agent in temp.values():
-            for mutation_no in range(9):
+            for mutation_no in range(int(0.9 * N)):
                 try:
                     # create new agent
                     m = Agent(snake=Snake(w=self.w,
                                           h=self.h),
                               model=SnakeModel)
                     m1 = curr_agent["agent"].model
-                    new_m = m.model
+
+                    # print(f"new model weights inttial")
+                    # print(m.model.state_dict())
 
                     # update the new agents weights
-                    for (n1, a1), (n2, a2) in zip(m1.named_parameters(), new_m.named_parameters()):
-                        with torch.no_grad():
-                            a2.copy_(a1 + torch.randn(a2.shape)
-                                     * torch.randn(a2.shape))
-                            
+                    self.__combine_weights_s2(prev_m=m1,
+                                              new_m=m.model)
+                    
+                    # print(f"new model new weights")
+                    # print(m.model.state_dict())
+
                     new_agents[idx] = {
                         "agent": m,
                         "fitness": 0,
@@ -157,16 +175,79 @@ class Agents:
                         "agent_no": idx,
                     }
                     idx += 1
+
                 except Exception as e:
                     # this is when there aren't two value or
                     # when len(agents) is odd
                     print(f"Some excpetion occured for: {idx}")
                     print(e)
                     pass
-        
-        # print(f"New agents made in new generation are {len(new_agents)}")
-        # print(f"temp -> {len(temp)}, new_agents -> {len(new_agents)}, idx -> {idx}")
+
         return new_agents
+
+    def __print_agents(self, agents):
+        print(f"\n")
+        for k, v in agents.items():
+            print(f"Agent no: {k}")
+            print(f"Fitness:  {v['fitness']}")
+            print(f"Score:    {v['score']}")
+            print(f"Steps:    {v['steps']}")
+            print(f"GEN:      {v['gen']}")
+            print("\n")
+        print("\n")
+
+    def next_generation(self):
+        """
+        Take current agents (n) and mutate them into n/2 or n/2-1
+
+        Steps:
+        - sort the agents based on fitness.
+        - make new agents using some strategy
+        - make new agent from the combined weights
+        - update the agents list
+        """
+        self.gen += 1
+        # print(f"normal agents are \n")
+        # self.__print_agents(self.agents)
+
+        sorted_agents = self.sort_agents()
+
+        # print(f"Sorted agents are")
+        # self.__print_agents(sorted_agents)
+
+        # print(f"normal agents are \n")
+        # self.__print_agents(self.agents)
+
+        # update best scores
+        for k, v in sorted_agents.items():
+
+            self.this_gen_best_scores["fitness"] = v["fitness"]
+            self.this_gen_best_scores["score"] = v["score"]
+
+            if self.best_scores["fitness"] < v["fitness"]:
+                self.best_scores["fitness"] = v["fitness"]
+
+            if self.best_scores["score"] < v["score"]:
+                self.best_scores["score"] = v["score"]
+
+            break
+
+        # print("Best scores")
+        # for k, v in self.best_scores.items():
+        #     print(f"{k}: {v}")
+
+        combined_agents = self.__combine_agents_stragegy_2(
+            agents=sorted_agents)
+
+        # print("Combined agents \n")
+        # self.__print_agents(combined_agents)
+        # return
+
+        self.agents = combined_agents
+
+        # del sorted_agents
+        # del combined_agents
+        self.__initialize()
 
     def __combine_agents(self, agents):
         """
@@ -207,166 +288,3 @@ class Agents:
                 pass
 
         return new_agents
-
-    def next_generation(self):
-        """
-        Take current agents (n) and mutate them into n/2 or n/2-1
-
-        Steps:
-        - sort the agents based on fitness.
-        - make new agents using some strategy
-        - make new agent from the combined weights
-        - update the agents list
-        """
-        self.gen += 1
-
-        sorted_agents = self.sort_agents()
-
-        # update best scores
-        if self.best_scores["fitness"] < sorted_agents[0]["fitness"]:
-            self.best_scores["fitness"] = sorted_agents[0]["fitness"]
-
-        if self.best_scores["score"] < sorted_agents[0]["score"]:
-            self.best_scores["score"] = sorted_agents[0]["score"]
-
-        combined_agents = self.__combine_agents_stragegy_2(agents=sorted_agents)
-        self.agents = combined_agents
-
-        del sorted_agents
-        del combined_agents
-        self.__initialize()
-
-class Agent:
-    def __init__(self,
-                 snake,
-                 model=SnakeModel):
-        self.state = None
-        self.snake = snake
-        self.model = model(32, 10, 4)
-
-    def get_state(self) -> None:
-        """
-        one hot vectors of head and tail direction
-        8 directions which include 3 things
-        - distance from the wall (variable)
-        - distance of the food (variable)
-        - is snake body in between (variable)
-        """
-        # gather head direction
-        head_direction = self.snake.head_direction
-        tail_direction = self.snake.tail_direction
-
-        directions = [Direction.RIGHT, Direction.LEFT,
-                      Direction.UP, Direction.DOWN]
-
-        # converting to one-hot
-        head_direction = [1 if head_direction == x else 0 for x in directions]
-        tail_direction = [1 if tail_direction == x else 0 for x in directions]
-
-        # horizontal direction
-        # we have to give a fn which defines how to get next block to self.snake__direction_state, and it will return
-        # all the three values.
-        def rd(b):
-            """right direction"""
-            x, y = b.x, b.y
-            return Point(x+BLOCK_SIZE, y, Color.BLACK.value)
-
-        def ld(b):
-            """left direction"""
-            x, y = b.x, b.y
-            return Point(x-BLOCK_SIZE, y, Color.BLACK.value)
-
-        def ud(b):
-            """up direction"""
-            x, y = b.x, b.y
-            return Point(x, y-BLOCK_SIZE, Color.BLACK.value)
-
-        def dd(b):
-            """down direction"""
-            x, y = b.x, b.y
-            return Point(x, y+BLOCK_SIZE, Color.BLACK.value)
-
-        def t1(b):
-            x, y = b.x, b.y
-            return Point(x+BLOCK_SIZE, y+BLOCK_SIZE, Color.BLACK.value)
-
-        def t2(b):
-            x, y = b.x, b.y
-            return Point(x+BLOCK_SIZE, y-BLOCK_SIZE, Color.BLACK.value)
-
-        def t3(b):
-            x, y = b.x, b.y
-            return Point(x-BLOCK_SIZE, y+BLOCK_SIZE, Color.BLACK.value)
-
-        def t4(b):
-            x, y = b.x, b.y
-            return Point(x-BLOCK_SIZE, y-BLOCK_SIZE, Color.BLACK.value)
-
-        # horizontal direction (right)
-        wall_distance, snake_body, food_distance = self.snake._direction_state(
-            self.snake.head, rd)
-        right_direction = [wall_distance, snake_body, food_distance]
-
-        # horizontal direction (left)
-        wall_distance, snake_body, food_distance = self.snake._direction_state(
-            self.snake.head, ld)
-        left_direction = [wall_distance, snake_body, food_distance]
-
-        # vertical direction (up)
-        wall_distance, snake_body, food_distance = self.snake._direction_state(
-            self.snake.head, ud)
-        up_direction = [wall_distance, snake_body, food_distance]
-
-        # vertical direction (down)
-        wall_distance, snake_body, food_distance = self.snake._direction_state(
-            self.snake.head, dd)
-        down_direction = [wall_distance, snake_body, food_distance]
-
-        wall_distance, snake_body, food_distance = self.snake._direction_state(
-            self.snake.head, t1)
-        t1_direction = [wall_distance, snake_body, food_distance]
-
-        wall_distance, snake_body, food_distance = self.snake._direction_state(
-            self.snake.head, t2)
-        t2_direction = [wall_distance, snake_body, food_distance]
-
-        wall_distance, snake_body, food_distance = self.snake._direction_state(
-            self.snake.head, t3)
-        t3_direction = [wall_distance, snake_body, food_distance]
-
-        wall_distance, snake_body, food_distance = self.snake._direction_state(
-            self.snake.head, t4)
-        t4_direction = [wall_distance, snake_body, food_distance]
-        # making tensor
-        self.state = torch.tensor([
-            *right_direction,
-            *left_direction,
-            *up_direction,
-            *down_direction,
-            *t1_direction,
-            *t2_direction,
-            *t3_direction,
-            *t4_direction,
-            *head_direction,
-            *tail_direction
-        ],
-            dtype=torch.float32,).reshape(1, -1)
-
-    def take_action(self):
-        """
-        Updates the next direction 
-        of snake.
-        """
-        next_action = self.model(self.state)
-        next_action = torch.argmax(next_action).item()
-        temp_direction = [Direction.RIGHT,
-                          Direction.LEFT, Direction.UP, Direction.DOWN]
-        next_direction = temp_direction[next_action]
-        self.snake.head_direction = next_direction
-        # print(f"snake will move in {self.snake.head_direction}")
-
-    def fitness(self, steps):
-        """f(steps, apples) = steps + (2**apples + apples**2.1*500) - [apples ** 1.2 * (0.25 * steps)**1.3]"""
-        apples = self.snake.score
-
-        return steps + (2 ** apples + apples ** 2.1 * 500) - (apples ** 1.2 * (0.25 * steps) ** 1.3)
