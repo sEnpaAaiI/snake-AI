@@ -1,4 +1,3 @@
-import pygame
 from collections import namedtuple
 from enum import Enum
 import random
@@ -112,6 +111,11 @@ class Snake:
         return (wall_distance, snake_body, food_distance)
 
     def __update_ui(self):
+        import pygame
+        if not self.iflag:
+            print("Imported pygame via snake.py")
+            self.iflag = 1
+
         for p in self.snake:
             pygame.draw.rect(self.display,
                              p.color,

@@ -1,6 +1,6 @@
 import numpy as np
 
-from snake import Color, BLOCK_SIZE, Snake
+from snake import Color, Snake
 from model import SnakeModel
 from _agent import Agent
 
