@@ -97,7 +97,6 @@ class Agents:
 
         Currently hard coded based on the model architecture
         """
-        # print('chanign weghts')
         def change_weights(p, n):
             n = 0
             n = p + (np.random.randn(*p.shape) * np.random.randn(*p.shape))

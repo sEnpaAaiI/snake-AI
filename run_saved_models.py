@@ -9,7 +9,7 @@ from agent import Agents
 
 WIDTH = 200
 HEIGHT = 200
-FPS = 1
+FPS = 10
 
 
 class Game:
@@ -107,7 +107,7 @@ class Game:
             self.snake.font = self.font
 
             self.agent = Agent(snake=self.snake)
-            self.load_weights(16, self.agent.model)
+            self.load_weights(80, self.agent.model)
 
         while True:
             if self.snake.game_over:
