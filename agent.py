@@ -34,7 +34,7 @@ class Agents:
             "avg_fitness": 0,
         }
         self.gen = gen
-        if not base_model:
+        if base_model > 0:
             print("Starting with new gen models")
             for i in range(n_agents):
                 self.agents[i] = {
