@@ -5,15 +5,15 @@ from collections import namedtuple
 from snake import BLOCK_SIZE, Color, Point
 from agent import Agents
 
-WIDTH = 240
-HEIGHT = 240
-FPS = 1000
+WIDTH = 200
+HEIGHT = 200
+FPS = 1000000
 
 
 class Game:
     def __init__(self,
-                 n_agents=10,
-                 total_games=100):
+                 n_agents=100,
+                 total_games=1000):
         pygame.init()
 
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -73,7 +73,7 @@ class Game:
 
         # run for each game
         for game_no in range(self.total_games):
-            games_played_by_curr_gen = -1
+            games_played_by_curr_gen = 0
             if game_no != 0:
                 __print_scores()
                 # print(f"Total agents are {len(self.agents.agents)}")
@@ -83,9 +83,10 @@ class Game:
 
             # Run the simulation for on Generation
             while True:
-
-                games_played_by_curr_gen += 1
-                if games_played_by_curr_gen == self.n_agents:
+                # print(f"Playing for a gen")
+                # print(f"agents are {len(self.agents.agents)}")
+                if games_played_by_curr_gen == (len(self.agents.agents)):
+                    print("breaked here")
                     break
                 
                 # Get snake to run simulation on
@@ -94,7 +95,7 @@ class Game:
 
                 # simulate the snake
                 while True:
-
+                    # print("playing for one snake")
                     # if the snake is stuck in a loop
                     if self.agents.curr_steps > 100 and self.current_agent.snake.score < 10:
                         self.current_agent.snake.game_over = True
@@ -104,11 +105,13 @@ class Game:
 
                         # reset agent's snake for next fresh run
                         self.current_agent.snake.reset()
+
+                        games_played_by_curr_gen += 1
                         break
 
                     self.screen.fill(Color.BLACK.value)
-                    self.display_blocks()
-                    self.extra_display(self.agents.gen)
+                    # self.display_blocks()
+                    # self.extra_display(self.agents.gen)
 
                     for event in pygame.event.get():
                         if event.type == pygame.QUIT:
@@ -118,12 +121,16 @@ class Game:
                     self.current_agent.get_state()
                     self.current_agent.take_action()
                     self.current_agent.snake.update()
-                    self.current_agent.snake.render()
+
+                    # more optimized version
+                    # self.current_agent.snake.render()
 
                     self.agents.update_steps()
 
                     pygame.display.flip()
-                    self.clock.tick(FPS)
+
+                    # For maximum speed omit this line
+                    # self.clock.tick(FPS)
 
         # print("\nResults\n#############\n")
         # for i in range(len(self.agents.agents.keys())):

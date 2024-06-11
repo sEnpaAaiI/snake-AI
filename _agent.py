@@ -1,4 +1,5 @@
-import torch
+
+import numpy as np
 from snake import Direction, Point, Color, BLOCK_SIZE
 from model import SnakeModel
 
@@ -110,7 +111,7 @@ class Agent:
 
         # making tensor
         # right_direction = [wall_distance, snake_body, food_distance]
-        self.state = torch.tensor([
+        self.state = np.array([
             *right_direction,
             *left_direction,
             *up_direction,
@@ -122,7 +123,7 @@ class Agent:
             *head_direction,
             *tail_direction
         ],
-            dtype=torch.float32,).reshape(1, -1)
+            dtype=np.float32,).reshape(-1, 1)
         
 
     def take_action(self):
@@ -131,7 +132,7 @@ class Agent:
         of snake.
         """
         next_action = self.model(self.state)
-        next_action = torch.argmax(next_action).item()
+        next_action = np.argmax(next_action)
         directions = [Direction.RIGHT,
                       Direction.LEFT, Direction.UP, Direction.DOWN]
         next_direction = directions[next_action]
@@ -141,5 +142,5 @@ class Agent:
         """f(steps, apples) = steps + (2**apples + apples**2.1*500) - [apples ** 1.2 * (0.25 * steps)**1.3]"""
 
         apples = self.snake.score
-        return 1000 * apples + 1 * steps
+        # return 1000 * apples + 1 * steps
         return steps + (2 ** apples + apples ** 2.1 * 500) - (apples ** 1.2 * (0.25 * steps) ** 1.3)

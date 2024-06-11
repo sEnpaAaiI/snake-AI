@@ -1,4 +1,5 @@
-import torch
+import numpy as np
+
 from snake import Color, BLOCK_SIZE, Snake
 from model import SnakeModel
 from _agent import Agent
@@ -24,6 +25,8 @@ class Agents:
         self.this_gen_best_scores = {
             "fitness": 0,
             "score": 0,
+            "avg_score": 0,
+            "avg_fitness": 0,
         }
         self.gen = 0
         for i in range(n_agents):
@@ -91,11 +94,19 @@ class Agents:
         """
         It combines the weights of the prev_m and new_m
         using some strategy
+
+        Currently hard coded...
         """
-        for (_, prev), (_, neww) in zip(prev_m.named_parameters(), new_m.named_parameters()):
-            with torch.no_grad():
-                neww.copy_(prev + (torch.randn(prev.shape)
-                           * torch.randn(prev.shape)))
+        # print('chanign weghts')
+        def change_weights(p, n):
+            n = 0
+            n = p + np.random.randn(*p.shape) * np.random.randn(*p.shape)
+            return n
+
+        new_m.l1 = change_weights(prev_m.l1, new_m.l1)
+        new_m.l2 = change_weights(prev_m.l2, new_m.l2)
+        # print("done")
+        return
 
     def __combine_agents_stragegy_2(self, agents):
         """
@@ -111,7 +122,7 @@ class Agents:
 
         # pick the top 10% agents
         N = len(agents)
-        no_top_agents = 0.1 * N
+        no_top_agents = int(0.1 * N)
 
         # this is cause we are going to change the items in new_agents,
         # and we cannot iterate over it in the same time.
@@ -121,13 +132,11 @@ class Agents:
         for k, v in agents.items():
             if no_top_agents == 0:
                 break
-            else:
-                no_top_agents -= 1
-
-                # print("the agent taken is: ")
-                # print(f"{k}")
-                # print(f"{v}")
-                # print("\n")
+            no_top_agents -= 1
+            # print("the agent taken is: ")
+            # print(f"{k}")
+            # print(f"{v}")
+            # print("\n")
 
             new_agents[idx] = v
             new_agents[idx]["fitness"] = 0
@@ -146,8 +155,9 @@ class Agents:
             idx += 1
 
         # we are making 9 new agents from existing agents
+        # The math works better
         for curr_agent in temp.values():
-            for mutation_no in range(int(0.9 * N)):
+            for mutation_no in range(0, 9):
                 try:
                     # create new agent
                     m = Agent(snake=Snake(w=self.w,
@@ -161,7 +171,7 @@ class Agents:
                     # update the new agents weights
                     self.__combine_weights_s2(prev_m=m1,
                                               new_m=m.model)
-                    
+
                     # print(f"new model new weights")
                     # print(m.model.state_dict())
 
@@ -186,7 +196,6 @@ class Agents:
         return new_agents
 
     def __print_agents(self, agents):
-        print(f"\n")
         for k, v in agents.items():
             print(f"Agent no: {k}")
             print(f"Fitness:  {v['fitness']}")
@@ -208,15 +217,24 @@ class Agents:
         """
         self.gen += 1
         # print(f"normal agents are \n")
+        # print(f"nowmal len{len(self.agents)}")
         # self.__print_agents(self.agents)
 
         sorted_agents = self.sort_agents()
 
         # print(f"Sorted agents are")
+        # print(f"sorlen {len(sorted_agents)}")
         # self.__print_agents(sorted_agents)
 
         # print(f"normal agents are \n")
         # self.__print_agents(self.agents)
+
+        # taking average
+        N = len(sorted_agents)
+        self.this_gen_best_scores["avg_score"] = sum(
+            x["score"] for x in sorted_agents.values()) / N
+        self.this_gen_best_scores["avg_fitness"] = sum(
+            x["fitness"] for x in sorted_agents.values()) / N
 
         # update best scores
         for k, v in sorted_agents.items():
@@ -235,56 +253,20 @@ class Agents:
         # print("Best scores")
         # for k, v in self.best_scores.items():
         #     print(f"{k}: {v}")
+        try:
+            # print("let comgine noew")
+            combined_agents = self.__combine_agents_stragegy_2(
+                agents=sorted_agents)
 
-        combined_agents = self.__combine_agents_stragegy_2(
-            agents=sorted_agents)
+            # print(f"combine agets len {len(combined_agents)}")
+            # print("Combined agents \n")
+            # self.__print_agents(combined_agents)
+            # return
 
-        # print("Combined agents \n")
-        # self.__print_agents(combined_agents)
-        # return
+            self.agents = combined_agents
 
-        self.agents = combined_agents
-
-        # del sorted_agents
-        # del combined_agents
-        self.__initialize()
-
-    def __combine_agents(self, agents):
-        """
-        Logic to make new agents from prev agents.
-        """
-        new_agents = dict()
-        idx = 0
-        for a in range(0, len(agents), 2):
-            try:
-                # create new agent
-                m = Agent(snake=Snake(w=self.w,
-                                      h=self.h),
-                          model=SnakeModel)
-                m1 = agents[a]["agent"].model
-                m2 = agents[a+1]["agent"].model
-                new_m = m.model
-
-                # update the new agents weights
-                for (n1, a1), (n2, a2), (n3, a3) in zip(m1.named_parameters(), m2.named_parameters(), new_m.named_parameters()):
-                    with torch.no_grad():
-                        a3.copy_(a1 * 0.5 + a2 * 0.5)
-
-                new_agents[idx] = {
-                    "agent": m,
-                    "fitness": 0,
-                    "color": Color.GREEN.value,
-                    "steps": 0,
-                    "gen": self.gen,
-                    "score": 0,
-                    "agent_no": idx,
-                }
-                idx += 1
-            except Exception as e:
-                # this is when there aren't two value or
-                # when len(agents) is odd
-                print(f"Some excpetion occured for: {idx}")
-                # print(e)
-                pass
-
-        return new_agents
+            # del sorted_agents
+            # del combined_agents
+            self.__initialize()
+        except Exception as e:
+            print("Error ", e)
