@@ -1,6 +1,8 @@
 import pygame
+import os
 import sys
 from collections import namedtuple
+import numpy as np
 
 from snake import BLOCK_SIZE, Color, Point
 from agent import Agents
@@ -12,7 +14,7 @@ FPS = 1000000
 
 class Game:
     def __init__(self,
-                 n_agents=100,
+                 n_agents=1000,
                  total_games=1000):
         pygame.init()
 
@@ -53,6 +55,42 @@ class Game:
             "GEN: " + str(gen), True, Color.WHITE.value)
         self.screen.blit(text, [WIDTH - 7 * BLOCK_SIZE, 0])
 
+    def save_best_agent(self, game_no):
+        """
+        Saves the model weigths (i.e., np array)
+        """
+        save_dir = f'weights/{game_no}'
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        # best score model
+        l1 = self.agents.best_scores["best_score_agent"].model.l1
+        l1_b = self.agents.best_scores["best_score_agent"].model.l1_b
+
+        l2 = self.agents.best_scores["best_score_agent"].model.l2
+        l2_b = self.agents.best_scores["best_score_agent"].model.l2_b
+
+        np.save(f"weights/{game_no}/_score_l1", l1)
+        np.save(f"weights/{game_no}/_score_l1_b", l1_b)
+
+        np.save(f"weights/{game_no}/_score_l2", l2)
+        np.save(f"weights/{game_no}/_score_l2_b", l2_b)
+
+        # best fitness model
+        l1 = self.agents.best_scores["best_fitness_agent"].model.l1
+        l1_b = self.agents.best_scores["best_fitness_agent"].model.l1_b
+
+        l2 = self.agents.best_scores["best_fitness_agent"].model.l2
+        l2_b = self.agents.best_scores["best_fitness_agent"].model.l2_b
+
+        np.save(f"weights/{game_no}/_fitness_l1", l1)
+        np.save(f"weights/{game_no}/_fitness_l1_b", l1_b)
+
+        np.save(f"weights/{game_no}/_fitness_l2", l2)
+        np.save(f"weights/{game_no}/_fitness_l2_b", l2_b)
+
+        print("Model weights saved...")
+
     def play(self,):
         """
         Defines logic to run the genetic algorithm
@@ -65,37 +103,39 @@ class Game:
             print(f"Best Scores:")
             for k, v in self.agents.best_scores.items():
                 print(f"{k}: {v}")
-            
+
             print(f"This GEN Best Scores:")
             for k, v in self.agents.this_gen_best_scores.items():
                 print(f"{k}: {v}")
             print("\n")
 
         # run for each game
+        prev_best_score = 0
         for game_no in range(self.total_games):
             games_played_by_curr_gen = 0
             if game_no != 0:
                 __print_scores()
-                # print(f"Total agents are {len(self.agents.agents)}")
 
-            else: 
+                # check if we need to save weights
+                if self.agents.best_scores["score"] > prev_best_score:
+                    prev_best_score = self.agents.best_scores["score"]
+                    self.save_best_agent(game_no)
+
+            else:
                 print(f"Starting Simulation...")
 
             # Run the simulation for on Generation
             while True:
-                # print(f"Playing for a gen")
-                # print(f"agents are {len(self.agents.agents)}")
                 if games_played_by_curr_gen == (len(self.agents.agents)):
-                    print("breaked here")
                     break
-                
+
                 # Get snake to run simulation on
                 self.agent = self.agents.get_current_agent()
                 self.current_agent = self.agent["agent"]
 
                 # simulate the snake
                 while True:
-                    # print("playing for one snake")
+
                     # if the snake is stuck in a loop
                     if self.agents.curr_steps > 100 and self.current_agent.snake.score < 10:
                         self.current_agent.snake.game_over = True

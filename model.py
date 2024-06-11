@@ -8,14 +8,15 @@ class SnakeModel:
                  output_units):
         self.l1 = np.random.randn(
             input_units, hidden_units) * np.sqrt(1/input_units)
+        self.l1_b = np.random.randn(1, hidden_units) * 0.1
         self.l2 = np.random.randn(
             hidden_units, output_units) * np.sqrt(1/input_units)
+        self.l2_b = np.random.randn(1, output_units) * 0.1
 
     def forward(self, state):
-        # 32 X 1, 32 X 10
-        x = state.T @ self.l1  # 1, 10
+        x = (state.T @ self.l1) + self.l1_b
         x = relu(x)
-        x = x @ self.l2  # 1, 10 ... 10, 4 -> 1, 4
+        x = (x @ self.l2) + self.l2_b
         return softmax(x)
 
     def __call__(self, x):

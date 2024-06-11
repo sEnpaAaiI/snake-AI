@@ -95,17 +95,27 @@ class Agents:
         It combines the weights of the prev_m and new_m
         using some strategy
 
-        Currently hard coded...
+        Currently hard coded based on the model architecture
         """
         # print('chanign weghts')
         def change_weights(p, n):
             n = 0
-            n = p + np.random.randn(*p.shape) * np.random.randn(*p.shape)
+            n = p + (np.random.randn(*p.shape) * np.random.randn(*p.shape))
             return n
-
+        
+        def change_biases(p, n):
+            n = 0
+            n = p + (0.1 * np.random.randn(*p.shape))
+            return n
+        
+        # updating weights
         new_m.l1 = change_weights(prev_m.l1, new_m.l1)
         new_m.l2 = change_weights(prev_m.l2, new_m.l2)
-        # print("done")
+
+        # updating biases
+        new_m.l1_b = change_biases(prev_m.l1_b, new_m.l1_b)
+        new_m.l2_b = change_biases(prev_m.l2_b, new_m.l2_b)
+
         return
 
     def __combine_agents_stragegy_2(self, agents):
@@ -244,9 +254,11 @@ class Agents:
 
             if self.best_scores["fitness"] < v["fitness"]:
                 self.best_scores["fitness"] = v["fitness"]
+                self.best_scores["best_fitness_agent"] = v["agent"]
 
             if self.best_scores["score"] < v["score"]:
                 self.best_scores["score"] = v["score"]
+                self.best_scores["best_score_agent"] = v["agent"]
 
             break
 

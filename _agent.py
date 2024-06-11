@@ -10,7 +10,7 @@ class Agent:
                  model=SnakeModel):
         self.state = None
         self.snake = snake
-        self.model = model(32, 10, 4)
+        self.model = model(32 + 12, 20, 4)
 
     def get_state(self) -> None:
         """
@@ -72,6 +72,23 @@ class Agent:
         def t4(b):
             x, y = b.x, b.y
             return Point(x-BLOCK_SIZE, y-BLOCK_SIZE, Color.BLACK.value)
+        
+        # more directions...
+        def t5(b):
+            x, y = b.x, b.y
+            return Point(x+BLOCK_SIZE+BLOCK_SIZE, y-BLOCK_SIZE, Color.BLACK.value)
+        
+        def t6(b):
+            x, y = b.x, b.y
+            return Point(x-BLOCK_SIZE-BLOCK_SIZE, y-BLOCK_SIZE, Color.BLACK.value)
+        
+        def t7(b):
+            x, y = b.x, b.y
+            return Point(x+BLOCK_SIZE, y-BLOCK_SIZE-BLOCK_SIZE, Color.BLACK.value)
+        
+        def t8(b):
+            x, y = b.x, b.y
+            return Point(x-BLOCK_SIZE, y-BLOCK_SIZE-BLOCK_SIZE, Color.BLACK.value)
 
         # horizontal direction (right)
         wall_distance, snake_body, food_distance = self.snake._direction_state(
@@ -109,6 +126,22 @@ class Agent:
             self.snake.head, t4)
         t4_direction = [wall_distance, snake_body, food_distance]
 
+        # more directions
+        wall_distance, snake_body, food_distance = self.snake._direction_state(
+            self.snake.head, t5)
+        t5_direction = [wall_distance, snake_body, food_distance]
+        
+        wall_distance, snake_body, food_distance = self.snake._direction_state(
+            self.snake.head, t6)
+        t6_direction = [wall_distance, snake_body, food_distance]
+        
+        wall_distance, snake_body, food_distance = self.snake._direction_state(
+            self.snake.head, t7)
+        t7_direction = [wall_distance, snake_body, food_distance]
+        
+        wall_distance, snake_body, food_distance = self.snake._direction_state(
+            self.snake.head, t8)
+        t8_direction = [wall_distance, snake_body, food_distance]
         # making tensor
         # right_direction = [wall_distance, snake_body, food_distance]
         self.state = np.array([
@@ -120,6 +153,10 @@ class Agent:
             *t2_direction,
             *t3_direction,
             *t4_direction,
+            *t5_direction,
+            *t6_direction,
+            *t7_direction,
+            *t8_direction,
             *head_direction,
             *tail_direction
         ],
