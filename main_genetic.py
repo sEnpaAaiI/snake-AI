@@ -232,7 +232,7 @@ if __name__ == "__main__":
                         help='Total number of games (default: 1000)')
     parser.add_argument('--hd', type=int, default=40,
                         help='Hidden dimension (default: 20)')
-    parser.add_argument('--base_model', type=int, default=80,
+    parser.add_argument('--base_model', type=int, default=287,
                         help='base model to use')
     # Parse the arguments
     args = parser.parse_args()

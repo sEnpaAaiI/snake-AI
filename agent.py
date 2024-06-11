@@ -36,7 +36,7 @@ class Agents:
 
         self.gen = gen
 
-        if base_model > 0:
+        if base_model <= 0:
             print("Starting with new gen models")
             for i in range(n_agents):
                 self.agents[i] = {
