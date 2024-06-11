@@ -3,6 +3,7 @@ import numpy as np
 from snake import Color, Snake
 from model import SnakeModel
 from _agent import Agent
+from helpers import load_weights
 
 
 class Agents:
@@ -12,7 +13,9 @@ class Agents:
                  screen,
                  font,
                  n_agents=10,
-                 hd=20):
+                 hd=20,
+                 base_model=138,
+                 gen=0):
         self.w = w
         self.hd = hd
         self.h = h
@@ -30,19 +33,48 @@ class Agents:
             "avg_score": 0,
             "avg_fitness": 0,
         }
-        self.gen = 0
-        for i in range(n_agents):
-            self.agents[i] = {
-                "agent": Agent(snake=Snake(w=w, h=h),
+        self.gen = gen
+        if not base_model:
+            print("Starting with new gen models")
+            for i in range(n_agents):
+                self.agents[i] = {
+                    "agent": Agent(snake=Snake(w=w, h=h),
+                                   model=SnakeModel,
+                                   hd=hd),
+                    "fitness": 0,
+                    "color": Color.GREEN.value,
+                    "steps": 0,
+                    "gen": self.gen,
+                    "score": 0,
+                    "agent_no": i,
+                }
+        else:
+            print("Loaded base model weights")
+            # initialize base agent with pre-trained weights
+            base_agent = Agent(snake=Snake(w=w, h=h),
                                model=SnakeModel,
-                               hd=hd),
-                "fitness": 0,
-                "color": Color.GREEN.value,
-                "steps": 0,
-                "gen": self.gen,
-                "score": 0,
-                "agent_no": i,
-            }
+                               hd=hd)
+            load_weights(game_no=base_model,
+                         model=base_agent.model)
+            for i in range(n_agents):
+
+                # make new agent
+                agent = Agent(snake=Snake(w=w, h=h),
+                              model=SnakeModel,
+                              hd=hd)
+
+                self.__combine_weights_s2(prev_m=base_agent.model,
+                                                 new_m=agent.model)
+
+                self.agents[i] = {
+                    "agent": agent,
+                    "fitness": 0,
+                    "color": Color.GREEN.value,
+                    "steps": 0,
+                    "gen": self.gen,
+                    "score": 0,
+                    "agent_no": i,
+                }
 
         self.__initialize()
 
@@ -97,6 +129,7 @@ class Agents:
         """
         It combines the weights of the prev_m and new_m
         using some strategy
+        it updates the new_m weights
 
         Currently hard coded based on the model architecture
         """
@@ -104,12 +137,12 @@ class Agents:
             n = 0
             n = p + (np.random.randn(*p.shape) * np.random.randn(*p.shape))
             return n
-        
+
         def change_biases(p, n):
             n = 0
             n = p + (0.1 * np.random.randn(*p.shape))
             return n
-        
+
         # updating weights
         new_m.l1 = change_weights(prev_m.l1, new_m.l1)
         new_m.l2 = change_weights(prev_m.l2, new_m.l2)

@@ -17,7 +17,8 @@ class Game:
     def __init__(self,
                  hd,
                  n_agents=1000,
-                 total_games=1000):
+                 total_games=1000,
+                 base_model=80):
         # pygame.init()
 
         # self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -32,7 +33,8 @@ class Game:
                              n_agents=n_agents,
                              screen=None,
                              font=None,
-                             hd=hd)
+                             hd=hd,
+                             base_model=base_model)
 
     # def display_blocks(self):
     #     """
@@ -230,10 +232,12 @@ if __name__ == "__main__":
                         help='Total number of games (default: 1000)')
     parser.add_argument('--hd', type=int, default=40,
                         help='Hidden dimension (default: 20)')
-
+    parser.add_argument('--base_model', type=int, default=80,
+                        help='base model to use')
     # Parse the arguments
     args = parser.parse_args()
     game = Game(hd=args.hd,
               n_agents=args.n_agents,
-              total_games=args.total_games)
+              total_games=args.total_games,
+              base_model=args.base_model)
     game.play()
