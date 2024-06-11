@@ -33,7 +33,9 @@ class Agents:
             "avg_score": 0,
             "avg_fitness": 0,
         }
+
         self.gen = gen
+
         if base_model > 0:
             print("Starting with new gen models")
             for i in range(n_agents):
@@ -56,7 +58,19 @@ class Agents:
                                hd=hd)
             load_weights(game_no=base_model,
                          model=base_agent.model)
-            for i in range(n_agents):
+
+            # Loading the main model too here. 
+            self.agents[0] = {
+                "agent": base_agent,
+                "fitness": 0,
+                "color": Color.GREEN.value,
+                "steps": 0,
+                "gen": self.gen,
+                "score": 0,
+                "agent_no": 0,
+            }
+
+            for i in range(1, n_agents):
 
                 # make new agent
                 agent = Agent(snake=Snake(w=w, h=h),
