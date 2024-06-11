@@ -7,10 +7,11 @@ from model import SnakeModel
 class Agent:
     def __init__(self,
                  snake,
-                 model=SnakeModel):
+                 model=SnakeModel,
+                 hd=20):
         self.state = None
         self.snake = snake
-        self.model = model(32 + 12, 20, 4)
+        self.model = model(32 + 12, hd, 4)
 
     def get_state(self) -> None:
         """
@@ -179,5 +180,5 @@ class Agent:
         """f(steps, apples) = steps + (2**apples + apples**2.1*500) - [apples ** 1.2 * (0.25 * steps)**1.3]"""
 
         apples = self.snake.score
-        # return 1000 * apples + 1 * steps
-        return steps + (2 ** apples + apples ** 2.1 * 500) - (apples ** 1.2 * (0.25 * steps) ** 1.3)
+        return 1000 * apples + 1 * steps
+        # return steps + (2 ** apples + apples ** 2.1 * 500) - (apples ** 1.2 * (0.25 * steps) ** 1.3)

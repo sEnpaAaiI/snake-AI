@@ -1,4 +1,5 @@
 # import pygame
+import argparse
 import os
 import sys
 from collections import namedtuple
@@ -14,6 +15,7 @@ FPS = 1000000
 
 class Game:
     def __init__(self,
+                 hd,
                  n_agents=1000,
                  total_games=1000):
         # pygame.init()
@@ -29,7 +31,8 @@ class Game:
                              h=HEIGHT,
                              n_agents=n_agents,
                              screen=None,
-                             font=None)
+                             font=None,
+                             hd=hd)
 
     # def display_blocks(self):
     #     """
@@ -218,4 +221,19 @@ class Game:
         # print(f"Final Score: {self.snake.score}")
 
 
-Game().play()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Define some values...")
+
+    parser.add_argument('--n_agents', type=int, default=1000,
+                        help='Number of agents (default: 1000)')
+    parser.add_argument('--total_games', type=int, default=1000,
+                        help='Total number of games (default: 1000)')
+    parser.add_argument('--hd', type=int, default=40,
+                        help='Hidden dimension (default: 20)')
+
+    # Parse the arguments
+    args = parser.parse_args()
+    game = Game(hd=args.hd,
+              n_agents=args.n_agents,
+              total_games=args.total_games)
+    game.play()

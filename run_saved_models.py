@@ -7,9 +7,9 @@ import numpy as np
 from snake import BLOCK_SIZE, Color, Point
 from agent import Agents
 
-WIDTH = 200
-HEIGHT = 200
-FPS = 10
+WIDTH = 400
+HEIGHT = 400
+FPS = 30
 
 
 class Game:
@@ -107,7 +107,7 @@ class Game:
             self.snake.font = self.font
 
             self.agent = Agent(snake=self.snake)
-            self.load_weights(80, self.agent.model)
+            self.load_weights(138, self.agent.model)
 
         while True:
             if self.snake.game_over:

@@ -11,8 +11,10 @@ class Agents:
                  h,
                  screen,
                  font,
-                 n_agents=10,):
+                 n_agents=10,
+                 hd=20):
         self.w = w
+        self.hd = hd
         self.h = h
         self.agents = dict()
         self.screen = screen
@@ -32,7 +34,8 @@ class Agents:
         for i in range(n_agents):
             self.agents[i] = {
                 "agent": Agent(snake=Snake(w=w, h=h),
-                               model=SnakeModel),
+                               model=SnakeModel,
+                               hd=hd),
                 "fitness": 0,
                 "color": Color.GREEN.value,
                 "steps": 0,
@@ -171,7 +174,8 @@ class Agents:
                     # create new agent
                     m = Agent(snake=Snake(w=self.w,
                                           h=self.h),
-                              model=SnakeModel)
+                              model=SnakeModel,
+                              hd=self.hd)
                     m1 = curr_agent["agent"].model
 
                     # print(f"new model weights inttial")

@@ -112,10 +112,6 @@ class Snake:
 
     def __update_ui(self):
         import pygame
-        if not self.iflag:
-            print("Imported pygame via snake.py")
-            self.iflag = 1
-
         for p in self.snake:
             pygame.draw.rect(self.display,
                              p.color,
